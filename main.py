@@ -84,5 +84,9 @@ def main():
         print("actual_sparsity\tppl", file=f, flush=True)
         print(f"{sparsity_ratio:.4f}\t{ppl:.4f}", file=f, flush=True)
 
+    if args.save:
+        model.save_pretrained(args.save)
+        tokenizer.save_pretrained(args.save)
+
 if __name__ == '__main__':
     main()
