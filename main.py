@@ -36,7 +36,7 @@ def main():
     parser.add_argument("--cache_dir", default="llm_weights", type=str )
     parser.add_argument('--use_variant', action="store_true", help="whether to use the wanda variant described in the appendix")
     parser.add_argument('--save', type=str, default=None, help='Path to save results.')
-    parser.add_argument('--save_model', typr=str, default=None, help='Path to save the pruned model.')
+    parser.add_argument('--save_model', type=str, default=None, help='Path to save the pruned model.')
     args = parser.parse_args()
 
     # Setting seeds for reproducibility
