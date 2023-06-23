@@ -35,7 +35,7 @@ We provide a quick overview of the arguments:
 - `--prune_method`: We have implemented three pruning methods, namely [`magnitude`, `wanda`, `sparsegpt`].
 - `--sparsity_ratio`: Denotes the percentage of weights to be pruned.
 - `--sparsity_type`: Specifies the type of sparsity [`unstructured`, `2:4`, `4:8`].
-- `--use_variant`: Whether to use the Wanda variant proposed in the appendix, default is `False`. 
+- `--use_variant`: Whether to use the Wanda variant, default is `False`. 
 - `--save`: Specifies the directory where the result will be stored.
 
 For structured N:M sparsity, set the argument `--sparsity_type` to "2:4" or "4:8". An illustrative command is provided below:
