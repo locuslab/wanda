@@ -30,7 +30,7 @@ python main.py \
     --save out/llama_7b/unstructured/wanda/ 
 ```
 We provide a quick overview of the arguments:  
-- `--model`: The identifier for the LLaMA model on the HuggingFace model hub.
+- `--model`: The identifier for the LLaMA model on the Hugging Face model hub.
 - `--cache_dir`: Directory for loading or storing LLM weights. The default is `llm_weights`.
 - `--prune_method`: We have implemented three pruning methods, namely [`magnitude`, `wanda`, `sparsegpt`].
 - `--sparsity_ratio`: Denotes the percentage of weights to be pruned.
