@@ -13,6 +13,9 @@ class="center">
 
 Compared to magnitude pruning which removes weights solely based on their magnitudes, our pruning approach **Wanda** removes weights on a per-output basis, by the product of weight magnitudes and input activation norms.
 
+## Update
+- [x] (9.22.2023) Add support for LLaMA-2.
+- [x] (9.22.2023) Add code to reproduce the ablation study on OBS weight update in the paper.
 
 ## Setup
 Installation instructions can be found in [INSTALL.md](INSTALL.md).
@@ -46,6 +49,30 @@ python main.py \
     --sparsity_ratio 0.5 \
     --sparsity_type 2:4 \
     --save out/llama_7b/2-4/wanda/ 
+```
+
+### Pruning LLaMA-2
+For llama2 models, replace `--model` with `meta-llama/Llama-2-7b-hf` (take `7b` as an example):
+```sh 
+python main.py \
+    --model meta-llama/Llama-2-7b-hf \
+    --prune_method wanda \
+    --sparsity_ratio 0.5 \
+    --save out/llama_7b/unstructured/wanda/
+```
+
+### Ablation on OBS weight update
+To reproduce the results in Table 6. Run the following commands:
+```sh
+for method in ablate_magnitude ablate_wanda
+do 
+python main.py \
+    --model decapoda-research/llama-7b-hf \
+    --prune_method ${method} \
+    --sparsity_ratio 0.5 \
+    --sparsity_type unstructured \
+    --save out/llama_7b/ablate/
+done 
 ```
 
 For pruning image classifiers, see directory [image_classifiers](image_classifiers) for details.

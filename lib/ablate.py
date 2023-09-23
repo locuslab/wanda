@@ -8,8 +8,7 @@ import transformers
 torch.backends.cuda.matmul.allow_tf32 = False
 torch.backends.cudnn.allow_tf32 = False
 
-## SparseGPT: https://github.com/IST-DASLab/sparsegpt/tree/f5c25005a61f96a0933ca2f95705a963585aafaa
-class SparseGPT:
+class AblateGPT:
 
     def __init__(self, layer):
         self.layer = layer
@@ -24,6 +23,8 @@ class SparseGPT:
         self.H = torch.zeros((self.columns, self.columns), device=self.dev)
         self.nsamples = 0
 
+        self.scaler_row = torch.zeros((self.columns), device=self.dev)
+
     def add_batch(self, inp, out):
         if len(inp.shape) == 2:
             inp = inp.unsqueeze(0)
@@ -33,12 +34,33 @@ class SparseGPT:
                 inp = inp.reshape((-1, inp.shape[-1]))
             inp = inp.t()
         self.H *= self.nsamples / (self.nsamples + tmp)
+
+        self.scaler_row *= self.nsamples / (self.nsamples+tmp)
+
         self.nsamples += tmp
         inp = math.sqrt(2 / self.nsamples) * inp.float()
         self.H += inp.matmul(inp.t())
+        self.scaler_row += torch.norm(inp, p=2, dim=1) ** 2  / self.nsamples
+
+    def get_wanda_mask(self, sparsity):
+        W_metric = torch.abs(self.layer.weight.data) * torch.sqrt(self.scaler_row.reshape((1,-1)))
+        W_mask = (torch.zeros_like(W_metric) == 1)  ## initialize a mask to be all False
+        sort_res = torch.sort(W_metric, dim=-1, stable=True)
+        indices = sort_res[1][:,:int(W_metric.shape[1]*sparsity)]
+        W_mask.scatter_(1, indices, True)
+
+        return W_mask 
+
+    def get_mag_mask(self, sparsity):
+        W = self.layer.weight.data 
+        W_metric = torch.abs(W)
+        thresh = torch.sort(W_metric.flatten().cuda())[0][int(W.numel()*sparsity)].cpu()
+        W_mask = (W_metric<=thresh)
+
+        return W_mask 
 
     def fasterprune(
-        self, sparsity, prune_n=0, prune_m=0, blocksize=128, percdamp=.01
+        self, sparsity, mask=None, prune_n=0, prune_m=0, blocksize=128, percdamp=.01
     ):
         W = self.layer.weight.data.clone()
         if isinstance(self.layer, nn.Conv2d):
@@ -65,7 +87,7 @@ class SparseGPT:
         H = torch.linalg.cholesky(H, upper=True)
         Hinv = H
 
-        mask = None
+        # mask = None
 
         for i1 in range(0, self.columns, blocksize):
             i2 = min(i1 + blocksize, self.columns)
