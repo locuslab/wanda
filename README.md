@@ -14,8 +14,8 @@ class="center">
 Compared to magnitude pruning which removes weights solely based on their magnitudes, our pruning approach **Wanda** removes weights on a per-output basis, by the product of weight magnitudes and input activation norms.
 
 ## Update
-- [x] (9.22.2023) Add support for LLaMA-2.
-- [x] (9.22.2023) Add code to reproduce the ablation study on OBS weight update in the paper.
+- [x] (9.22.2023) Add [support](https://github.com/locuslab/wanda#pruning-llama-2) for LLaMA-2.
+- [x] (9.22.2023) Add [code](https://github.com/locuslab/wanda#ablation-on-obs-weight-update) to reproduce the ablation study on OBS weight update in the paper.
 
 ## Setup
 Installation instructions can be found in [INSTALL.md](INSTALL.md).
@@ -62,21 +62,18 @@ python main.py \
     --save out/llama_7b/unstructured/wanda/
 ```
 LLaMA-2 results: (LLaMA-2-30b is not released as of 9.22.2023)
-| ppl              | llama2-7b | llama2-13b | llama2-70b |
-|------------------|----------|------------|------------|
-| dense            | 5.12     | 4.57       | 3.12     |
-| unstructured 50% |          |            |            |
-| magnitude        | 14.89    | 6.37       | 4.98     |
-| sparsegpt        | 6.51     | 5.63       | **3.98**  |
-| wanda            | **6.42** | **5.56**   | **3.98**  |
-| 4:8              |          |            |            |
-| magnitude        | 16.48    | 6.76       | 5.58     |
-| sparsegpt        | 8.12     | 6.60      | 4.59     |
-| wanda            | **7.97** | **6.55**  | **4.47**     |
-| 2:4              |          |            |            |
-| magnitude        | 54.59    | 8.33       | 6.33       |
-| sparsegpt        | **10.17** | 8.32       | 5.40      |
-| wanda            | 11.02    | **8.27**   | **5.16**     |
+|sparsity| ppl              | llama2-7b | llama2-13b | llama2-70b |
+|------|------------------|----------|------------|------------|
+|-| dense            | 5.12     | 4.57       | 3.12     |
+|unstructured 50%| magnitude        | 14.89    | 6.37       | 4.98     |
+|unstructured 50%| sparsegpt        | 6.51     | 5.63       | **3.98**  |
+|unstructured 50%| wanda            | **6.42** | **5.56**   | **3.98**  |
+|4:8| magnitude        | 16.48    | 6.76       | 5.58     |
+|4:8| sparsegpt        | 8.12     | 6.60      | 4.59     |
+|4:8| wanda            | **7.97** | **6.55**  | **4.47**     |
+|2:4| magnitude        | 54.59    | 8.33       | 6.33       |
+|2:4| sparsegpt        | **10.17** | 8.32       | 5.40      |
+|2:4| wanda            | 11.02    | **8.27**   | **5.16**     |
 
 ### Ablation on OBS weight update
 To reproduce the results in Table 6. Run the following commands:
