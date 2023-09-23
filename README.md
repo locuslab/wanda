@@ -7,7 +7,7 @@ Carnegie Mellon University, Meta AI and Bosch Center for AI
 
 --- 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/20168304/245999360-f951de47-269d-491d-826a-8e6d85627849.png" width=100% height=100% 
+<img src="https://user-images.githubusercontent.com/20168304/270077956-5d66e843-9dde-4439-aef6-abf876563ef7.png" width=100% height=100% 
 class="center">
 </p>
 
