@@ -52,14 +52,14 @@ python main.py \
 ```
 
 ### Pruning LLaMA-2
-For llama2 models, replace `--model` with `meta-llama/Llama-2-7b-hf` (take `7b` as an example):
+For [LLaMA-2](https://ai.meta.com/llama/) models, replace `--model` with `meta-llama/Llama-2-7b-hf` (take `7b` as an example):
 ```sh 
 python main.py \
     --model meta-llama/Llama-2-7b-hf \
     --prune_method wanda \
     --sparsity_ratio 0.5 \
     --sparsity_type unstructured \
-    --save out/llama_7b/unstructured/wanda/
+    --save out/llama2_7b/unstructured/wanda/
 ```
 LLaMA-2 results: (LLaMA-2-30b is not released as of 9.22.2023)
 |sparsity| ppl              | llama2-7b | llama2-13b | llama2-70b |
