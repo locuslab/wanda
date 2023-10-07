@@ -7,7 +7,7 @@ import torch.nn as nn
 from .data import get_loaders 
 
 # Function to evaluate perplexity (ppl) on a specified model and tokenizer
-def eval_ppl(model, tokenizer, device=torch.device("cuda:0")):
+def eval_ppl(args, model, tokenizer, device=torch.device("cuda:0")):
     # Set dataset
     dataset = "wikitext2"
 
@@ -15,15 +15,14 @@ def eval_ppl(model, tokenizer, device=torch.device("cuda:0")):
     print(f"evaluating on {dataset}")
 
     # Get the test loader
-    trainloader, testloader = get_loaders(
+    _, testloader = get_loaders(
         dataset, seed=0, seqlen=model.seqlen, tokenizer=tokenizer 
     )
 
     # Evaluate ppl in no grad context to avoid updating the model
     with torch.no_grad():
         ppl_test = eval_ppl_wikitext(model, testloader, 1, device)
-        ppl_train = eval_ppl_wikitext_train(model, trainloader, 1, device)
-    return ppl_train, ppl_test 
+    return ppl_test 
 
 # Function to evaluate perplexity (ppl) specifically on the wikitext dataset
 def eval_ppl_wikitext_train(model, trainloader, bs=1, device=None):

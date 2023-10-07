@@ -305,7 +305,7 @@ def prune_sparsegpt(args, model, tokenizer, dev, prune_n=0, prune_m=0):
 def prune_ablate(args, model, tokenizer, dev, prune_n=0, prune_m=0):
     ## SparseGPT code available at: https://github.com/IST-DASLab/sparsegpt/tree/f5c25005a61f96a0933ca2f95705a963585aafaa
     print('Starting ...')
-    dataloader, _ = get_loaders("c4",nsamples=args.nsamples,seed=args.seed,seqlen=2048,tokenizer=tokenizer)
+    dataloader, _ = get_loaders("c4",nsamples=args.nsamples,seed=args.seed,seqlen=model.seqlen,tokenizer=tokenizer)
 
     use_cache = model.config.use_cache
     model.config.use_cache = False
@@ -376,12 +376,14 @@ def prune_ablate(args, model, tokenizer, dev, prune_n=0, prune_m=0):
             print(i, name)
             print('Pruning ...')
 
-            if args.prune_method == "ablate_wanda":
-                prune_mask = gpts[name].get_wanda_mask(args.sparsity_ratio)
-            elif args.prune_method == "ablate_magnitude":
-                prune_mask = gpts[name].get_mag_mask(args.sparsity_ratio)
+            if args.prune_method == "ablate_wanda_seq":
+                prune_mask = gpts[name].get_wanda_mask(args.sparsity_ratio, prune_n, prune_m)
+            elif args.prune_method == "ablate_mag_seq":
+                prune_mask = gpts[name].get_mag_mask(args.sparsity_ratio, prune_n, prune_m)
+            elif "iter" in args.prune_method:
+                prune_mask = None 
 
-            gpts[name].fasterprune(args.sparsity_ratio, mask=prune_mask, prune_n=prune_n, prune_m=prune_m, percdamp=0.01, blocksize=128)
+            gpts[name].fasterprune(args, args.sparsity_ratio, mask=prune_mask, prune_n=prune_n, prune_m=prune_m, percdamp=0.01, blocksize=128)
             gpts[name].free()
 
         for j in range(args.nsamples):

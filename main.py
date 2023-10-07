@@ -6,6 +6,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from importlib.metadata import version
 
 from lib.prune import prune_wanda, prune_magnitude, prune_sparsegpt, prune_ablate, check_sparsity, find_layers
+# from lib.search import prune_search
 from lib.eval import eval_ppl
 
 print('torch', version('torch'))
@@ -32,11 +33,16 @@ def main():
     parser.add_argument('--nsamples', type=int, default=128, help='Number of calibration samples.')
     parser.add_argument('--sparsity_ratio', type=float, default=0, help='Sparsity level')
     parser.add_argument("--sparsity_type", type=str, choices=["unstructured", "4:8", "2:4"])
-    parser.add_argument("--prune_method", type=str, choices=["magnitude", "wanda", "sparsegpt", "ablate_magnitude", "ablate_wanda"])
+    parser.add_argument("--prune_method", type=str, choices=["magnitude", "wanda", "sparsegpt", 
+                        "ablate_mag_seq", "ablate_wanda_seq", "ablate_mag_iter", "ablate_wanda_iter", "search"])
     parser.add_argument("--cache_dir", default="llm_weights", type=str )
     parser.add_argument('--use_variant', action="store_true", help="whether to use the wanda variant described in the appendix")
     parser.add_argument('--save', type=str, default=None, help='Path to save results.')
     parser.add_argument('--save_model', type=str, default=None, help='Path to save the pruned model.')
+
+    parser.add_argument('--prune_metric', type=str, help='LLaMA model')
+    parser.add_argument('--prune_granularity', type=str, help='LLaMA model')
+    parser.add_argument('--blocksize', type=int, default=1, help='LLaMA model')
     args = parser.parse_args()
 
     # Setting seeds for reproducibility
@@ -77,19 +83,15 @@ def main():
     print(f"sparsity sanity check {sparsity_ratio:.4f}")
     print("*"*30)
     ################################################################
-    ppl_train, ppl_test = eval_ppl(model, tokenizer, device)
-    print(f"ppl on wikitext_train {ppl_train}, wikitext_test {ppl_test}")
+    ppl_test = eval_ppl(args, model, tokenizer, device)
+    print(f"wikitext perplexity {ppl_test}")
 
     if not os.path.exists(args.save):
         os.makedirs(args.save)
     save_filepath = os.path.join(args.save, f"log_{args.prune_method}.txt")
     with open(save_filepath, "w") as f:
-        if "ablate" in args.prune_method:
-            print("method\tactual_sparsity\tppl_train\tppl_test", file=f, flush=True)
-            print(f"{args.prune_method}\t{sparsity_ratio:.4f}\t{ppl_train:.4f}\t{ppl_test:.4f}", file=f, flush=True)
-        else:
-            print("method\tactual_sparsity\tppl_test", file=f, flush=True)
-            print(f"{args.prune_method}\t{sparsity_ratio:.4f}\t{ppl_test:.4f}", file=f, flush=True)
+        print("method\tactual_sparsity\tppl_test", file=f, flush=True)
+        print(f"{args.prune_method}\t{sparsity_ratio:.4f}\t{ppl_test:.4f}", file=f, flush=True)
 
     if args.save_model:
         model.save_pretrained(args.save_model)

@@ -16,6 +16,7 @@ Compared to magnitude pruning which removes weights solely based on their magnit
 ## Update
 - [x] (9.22.2023) Add [support](https://github.com/locuslab/wanda#pruning-llama-2) for LLaMA-2.
 - [x] (9.22.2023) Add [code](https://github.com/locuslab/wanda#ablation-on-obs-weight-update) to reproduce the ablation study on OBS weight update in the paper.
+- [x] (10.6.2023) Add new [support](https://github.com/locuslab/wanda#ablation-on-obs-weight-update) for the weight update analysis in the ablation study. Feel free to try it out!
 
 ## Setup
 Installation instructions can be found in [INSTALL.md](INSTALL.md).
@@ -61,7 +62,7 @@ python main.py \
     --sparsity_type unstructured \
     --save out/llama2_7b/unstructured/wanda/
 ```
-LLaMA-2 results: (LLaMA-2-30b is not released as of 9.22.2023)
+LLaMA-2 results: (LLaMA-2-34b is not released as of 9.22.2023)
 |sparsity| ppl              | llama2-7b | llama2-13b | llama2-70b |
 |------|------------------|----------|------------|------------|
 |-| dense            | 5.12     | 4.57       | 3.12     |
@@ -76,18 +77,19 @@ LLaMA-2 results: (LLaMA-2-30b is not released as of 9.22.2023)
 |2:4| wanda            | 11.02    | **8.27**   | **5.16**     |
 
 ### Ablation on OBS weight update
-To reproduce the results in Table 6. Run the following commands:
+To reproduce the analysis on weight update, we provide our implementation for this ablation. All commands can be found in [this script](scripts/ablate_weight_update.sh).
 ```sh
-for method in ablate_magnitude ablate_wanda
+for method in ablate_mag_seq ablate_wanda_seq ablate_mag_iter ablate_wanda_iter 
 do 
-python main.py \
-    --model decapoda-research/llama-7b-hf \
-    --prune_method ${method} \
-    --sparsity_ratio 0.5 \
-    --sparsity_type unstructured \
-    --save out/llama_7b/ablate/
+CUDA_VISIBLE_DEVICES=0 python main.py \
+  --model decapoda-research/llama-7b-hf \
+  --sparsity_ratio 0.5 \
+  --sparsity_type unstructured \
+  --prune_method ${method} \
+  --save out/llama_7b_ablation/unstructured/
 done 
 ```
+Here `ablate_{mag/wanda}_{seq/iter}` means that we use magnitude pruning or wanda to obtain the pruned mask at each layer, then apply weight update procedure with either a sequential style or an iterative style every 128 input channels. For details, please see Section 5 of our [paper](https://arxiv.org/abs/2306.11695).
 
 For pruning image classifiers, see directory [image_classifiers](image_classifiers) for details.
 

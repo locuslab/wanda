@@ -42,25 +42,38 @@ class AblateGPT:
         self.H += inp.matmul(inp.t())
         self.scaler_row += torch.norm(inp, p=2, dim=1) ** 2  / self.nsamples
 
-    def get_wanda_mask(self, sparsity):
+    def get_wanda_mask(self, sparsity, prunen, prunem):
         W_metric = torch.abs(self.layer.weight.data) * torch.sqrt(self.scaler_row.reshape((1,-1)))
         W_mask = (torch.zeros_like(W_metric) == 1)  ## initialize a mask to be all False
-        sort_res = torch.sort(W_metric, dim=-1, stable=True)
-        indices = sort_res[1][:,:int(W_metric.shape[1]*sparsity)]
-        W_mask.scatter_(1, indices, True)
+        if prunen != 0:
+            for ii in range(W_metric.shape[1]):
+                if ii % prunem == 0:
+                    tmp = W_metric[:,ii:(ii+prunem)].float()
+                    W_mask.scatter_(1,ii+torch.topk(tmp, prunen,dim=1, largest=False)[1], True)
+        else:
+            sort_res = torch.sort(W_metric, dim=-1, stable=True)
+            indices = sort_res[1][:,:int(W_metric.shape[1]*sparsity)]
+            W_mask.scatter_(1, indices, True)
 
         return W_mask 
 
-    def get_mag_mask(self, sparsity):
+    def get_mag_mask(self, sparsity, prunen, prunem):
         W = self.layer.weight.data 
         W_metric = torch.abs(W)
-        thresh = torch.sort(W_metric.flatten().cuda())[0][int(W.numel()*sparsity)].cpu()
-        W_mask = (W_metric<=thresh)
+        if prunen != 0:
+            W_mask = (torch.zeros_like(W)==1)
+            for ii in range(W_metric.shape[1]):
+                if ii % prunem == 0:
+                    tmp = W_metric[:,ii:(ii+prunem)].float()
+                    W_mask.scatter_(1,ii+torch.topk(tmp, prunen,dim=1, largest=False)[1], True)
+        else:
+            thresh = torch.sort(W_metric.flatten().cuda())[0][int(W.numel()*sparsity)].cpu()
+            W_mask = (W_metric<=thresh)
 
         return W_mask 
 
     def fasterprune(
-        self, sparsity, mask=None, prune_n=0, prune_m=0, blocksize=128, percdamp=.01
+        self, args, sparsity, mask=None, prune_n=0, prune_m=0, blocksize=128, percdamp=.01
     ):
         W = self.layer.weight.data.clone()
         if isinstance(self.layer, nn.Conv2d):
@@ -87,8 +100,6 @@ class AblateGPT:
         H = torch.linalg.cholesky(H, upper=True)
         Hinv = H
 
-        # mask = None
-
         for i1 in range(0, self.columns, blocksize):
             i2 = min(i1 + blocksize, self.columns)
             count = i2 - i1
@@ -99,11 +110,15 @@ class AblateGPT:
             Losses1 = torch.zeros_like(W1)
             Hinv1 = Hinv[i1:i2, i1:i2]
 
-            if prune_n == 0: 
+            if prune_n == 0 or mask is not None: 
                 if mask is not None:
                     mask1 = mask[:, i1:i2]
                 else:
-                    tmp = W1 ** 2 / (torch.diag(Hinv1).reshape((1, -1))) ** 2
+                    # tmp = W1 ** 2 / (torch.diag(Hinv1).reshape((1, -1))) ** 2
+                    if "wanda" in args.prune_method:
+                        tmp = torch.abs(W1) * torch.sqrt(self.scaler_row[i1:i2].reshape((1,-1)))
+                    elif "mag" in args.prune_method:
+                        tmp = torch.abs(W1)
                     thresh = torch.sort(tmp.flatten())[0][int(tmp.numel() * sparsity)]
                     mask1 = tmp <= thresh
             else:
@@ -113,8 +128,12 @@ class AblateGPT:
                 w = W1[:, i]
                 d = Hinv1[i, i]
 
-                if prune_n != 0 and i % prune_m == 0:
-                    tmp = W1[:, i:(i + prune_m)] ** 2 / (torch.diag(Hinv1)[i:(i + prune_m)].reshape((1, -1))) ** 2
+                if prune_n != 0 and i % prune_m == 0 and mask is None:
+                    # tmp = W1[:, i:(i + prune_m)] ** 2 / (torch.diag(Hinv1)[i:(i + prune_m)].reshape((1, -1))) ** 2
+                    if "wanda" in args.prune_method:
+                        tmp = torch.abs(W1[:, i:(i+prune_m)]) * torch.sqrt(self.scaler_row[(i+i1):(i+i1+prune_m)].reshape((1,-1)))
+                    elif "mag" in args.prune_method:
+                        tmp = torch.abs(W1[:, i:(i+prune_m)])
                     mask1.scatter_(1, i + torch.topk(tmp, prune_n, dim=1, largest=False)[1], True)
 
                 q = w.clone()
