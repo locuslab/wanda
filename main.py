@@ -6,8 +6,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from importlib.metadata import version
 
 from lib.prune import prune_wanda, prune_magnitude, prune_sparsegpt, prune_ablate, check_sparsity, find_layers
-# from lib.search import prune_search
-from lib.eval import eval_ppl
+from lib.eval import eval_ppl, eval_zero_shot
 
 print('torch', version('torch'))
 print('transformers', version('transformers'))
@@ -40,9 +39,7 @@ def main():
     parser.add_argument('--save', type=str, default=None, help='Path to save results.')
     parser.add_argument('--save_model', type=str, default=None, help='Path to save the pruned model.')
 
-    parser.add_argument('--prune_metric', type=str, help='LLaMA model')
-    parser.add_argument('--prune_granularity', type=str, help='LLaMA model')
-    parser.add_argument('--blocksize', type=int, default=1, help='LLaMA model')
+    parser.add_argument("--eval_zero_shot", action="store_true")
     args = parser.parse_args()
 
     # Setting seeds for reproducibility
@@ -92,6 +89,18 @@ def main():
     with open(save_filepath, "w") as f:
         print("method\tactual_sparsity\tppl_test", file=f, flush=True)
         print(f"{args.prune_method}\t{sparsity_ratio:.4f}\t{ppl_test:.4f}", file=f, flush=True)
+
+    if args.eval_zero_shot:
+        accelerate=False
+        if "30b" in args.model or "65b" in args.model or "70b" in args.model:
+            accelerate=True
+
+        task_list = ["boolq", "rte","hellaswag","winogrande", "arc_easy","arc_challenge", "openbookqa"]
+        num_shot = 0
+        results = eval_zero_shot(args.model, model, tokenizer, task_list, num_shot, accelerate)
+        print("********************************")
+        print("zero_shot evaluation results")
+        print(results)
 
     if args.save_model:
         model.save_pretrained(args.save_model)
