@@ -1,17 +1,17 @@
 # Pruning LLMs by Weights and Activations
 Official PyTorch implementation of **Wanda** (Pruning by **W**eights **and a**ctivations), as presented in our paper:
 
-[A Simple and Effective Pruning Approach for Large Language Models](https://arxiv.org/abs/2306.11695).  
+[A Simple and Effective Pruning Approach for Large Language Models](https://arxiv.org/abs/2306.11695)  
 [Mingjie Sun*](https://eric-mingjie.github.io/), [Zhuang Liu*](https://liuzhuang13.github.io/), [Anna Bair](https://annaebair.github.io/), [J. Zico Kolter](http://zicokolter.com/) (* indicates equal contribution)  
-Carnegie Mellon University, Meta AI and Bosch Center for AI  
+Carnegie Mellon University, Meta AI Research and Bosch Center for AI  
 
 --- 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/20168304/270077956-5d66e843-9dde-4439-aef6-abf876563ef7.png" width=100% height=100% 
+<img src="https://user-images.githubusercontent.com/20168304/273351964-53c3807e-3453-49c5-b855-b620b1026466.png" width=100% height=100% 
 class="center">
 </p>
 
-Compared to magnitude pruning which removes weights solely based on their magnitudes, our pruning approach **Wanda** removes weights on a per-output basis, by the product of weight magnitudes and input activation norms.
+Compared to magnitude pruning which removes weights solely based on their magnitudes, our pruning approach **Wanda** removes weights on a *per-output* basis, by the product of weight magnitudes and input activation norms.
 
 ## Update
 - [x] (9.22.2023) Add [support](https://github.com/locuslab/wanda#pruning-llama-2) for LLaMA-2.
@@ -107,10 +107,10 @@ liuzhuangthu at gmail.com
 
 ## Citation
 If you found this work useful, please consider citing:
-```
-@article{sun2023simple,
+```bibtex
+@article{sun2023wanda,
   title={A Simple and Effective Pruning Approach for Large Language Models}, 
-  author={Sun, Mingjie and Liu, Zhuang and Bair, Anna and Kolter, Zico},
+  author={Sun, Mingjie and Liu, Zhuang and Bair, Anna and Kolter, J. Zico},
   year={2023},
   journal={arXiv preprint arXiv:2306.11695}
 }
