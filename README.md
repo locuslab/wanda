@@ -1,9 +1,19 @@
 # Pruning LLMs by Weights and Activations
 Official PyTorch implementation of **Wanda** (Pruning by **W**eights **and a**ctivations), as presented in our paper:
 
-[A Simple and Effective Pruning Approach for Large Language Models](https://arxiv.org/abs/2306.11695)  
-[Mingjie Sun*](https://eric-mingjie.github.io/), [Zhuang Liu*](https://liuzhuang13.github.io/), [Anna Bair](https://annaebair.github.io/), [J. Zico Kolter](http://zicokolter.com/) (* indicates equal contribution)  
-Carnegie Mellon University, Meta AI Research and Bosch Center for AI  
+**A Simple and Effective Pruning Approach for Large Language Models** </br>
+*Mingjie Sun\*, Zhuang Liu\*, Anna Bair, J. Zico Kolter* (* indicates equal contribution) <br>
+Carnegie Mellon University, Meta AI Research and Bosch Center for AI  <br>
+[Paper](https://arxiv.org/abs/2306.11695) - [Project page](https://eric-mingjie.github.io/wanda/home.html)
+
+```bibtex
+@article{sun2023wanda,
+  title={A Simple and Effective Pruning Approach for Large Language Models}, 
+  author={Sun, Mingjie and Liu, Zhuang and Bair, Anna and Kolter, J. Zico},
+  year={2023},
+  journal={arXiv preprint arXiv:2306.11695}
+}
+```
 
 --- 
 <p align="center">
@@ -112,14 +122,3 @@ Feel free to discuss papers/code with us through issues/emails!
 
 mingjies at cs.cmu.edu  
 liuzhuangthu at gmail.com 
-
-## Citation
-If you found this work useful, please consider citing:
-```bibtex
-@article{sun2023wanda,
-  title={A Simple and Effective Pruning Approach for Large Language Models}, 
-  author={Sun, Mingjie and Liu, Zhuang and Bair, Anna and Kolter, J. Zico},
-  year={2023},
-  journal={arXiv preprint arXiv:2306.11695}
-}
-```
