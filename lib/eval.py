@@ -6,7 +6,6 @@ import torch.nn as nn
 # Import get_loaders function from data module within the same directory
 from .data import get_loaders 
 
-from lm_eval import tasks, evaluator 
 from collections import defaultdict
 import fnmatch
 
@@ -132,6 +131,7 @@ def eval_ppl_wikitext(model, testenc, bs=1, device=None):
 
 def eval_zero_shot(model_name, model, tokenizer, task_list=["boolq","rte","hellaswag","winogrande","arc_challenge","arc_easy","openbookqa"], 
         num_fewshot=0, use_accelerate=False, add_special_tokens=False):
+    from lm_eval import tasks, evaluator 
     def pattern_match(patterns, source_list):
         task_names = set()
         for pattern in patterns:
