@@ -109,6 +109,11 @@ For reproducibility, we used [commit `df3da98`](https://github.com/EleutherAI/lm
 
 On a high level, the functionality we provide is adding two arguments `pretrained_model` and `tokenizer` in this [function](https://github.com/EleutherAI/lm-evaluation-harness/blob/master/lm_eval/evaluator.py#L17). We can then call this `simple_evaluate` function API from our [codebase](https://github.com/locuslab/wanda/blob/main/lib/eval.py#L148) to evaluate sparse pruned LLMs. To evaluate zero-shot tasks in addition to the WikiText perplexity, pass the `--eval_zero_shot` argument. 
 
+### Speedup Evaluation
+The pruning speed for each method is evaluated by the cumulated time spent on pruning (for each layer), without the forward passes.
+
+For inference speedup with structured sparsity, we refer the reader to this [blog post](https://pytorch.org/tutorials/prototype/semi_structured_sparse.html), where  structured sparsity is supported by `PyTorch >= 2.1`. You can switch between the CUTLASS or CuSPARSELt kernel [here](https://github.com/pytorch/pytorch/blob/v2.1.0/torch/sparse/semi_structured.py#L55).
+
 Last, for pruning image classifiers, see directory [image_classifiers](image_classifiers) for details.
 
 ## Acknowledgement
