@@ -29,6 +29,7 @@ Compared to magnitude pruning which removes weights solely based on their magnit
 - [x] (10.6.2023) Add new [support](https://github.com/locuslab/wanda#ablation-on-obs-weight-update) for the weight update analysis in the ablation study. Feel free to try it out!
 - [x] (10.6.2023) Add [support](https://github.com/locuslab/wanda#zero-shot-evaluation) for zero-shot evaluation.
 - [x] (10.20.2023) Add code for pruning OPT models.
+- [x] (10.23.2023) Add code for [LoRA fine-tuning](lora_ft).
 
 ## Setup
 Installation instructions can be found in [INSTALL.md](INSTALL.md).
