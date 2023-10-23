@@ -1,7 +1,11 @@
 ## LoRA Fine-tuning of pruned LLMs
 Here we provide the script for the lora fine-tuning experiments in the paper. The commands for reproducing our experiments are in [script.sh](script.sh).
 
-This codebase is based on [run_clm.py](https://github.com/huggingface/transformers/tree/main/examples/pytorch/language-modeling#gpt-2gpt-and-causal-language-modeling). Here we adapt this code with LoRA fine-tuning on the C4 training dataset.
+This codebase is based on [run_clm.py](https://github.com/huggingface/transformers/tree/main/examples/pytorch/language-modeling#gpt-2gpt-and-causal-language-modeling). Here we adapt this code with LoRA fine-tuning on the C4 training dataset. Some custom changes we make in the code include:
+- [loc 1](https://github.com/locuslab/wanda/blob/main/lora_ft/finetune_lm.py#L374): set up LLaMA-7B for LoRA fine-tuning;
+- [loc 2](https://github.com/locuslab/wanda/blob/main/lora_ft/finetune_lm.py#L521): set up training arguments for Trainer.
+- [loc 3](https://github.com/locuslab/wanda/blob/main/lora_ft/finetune_lm.py#L364): we are using the tokenizer from vicuna, which are the same as the original LLaMA tokenizer but also fix the issues of some special tokens.
+- [loc 4](https://github.com/locuslab/wanda/blob/main/lora_ft/finetune_lm.py#L319): location to load the c4 training dataset.
 
 To train a LoRA adapter, run the command:
 ```sh
