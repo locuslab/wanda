@@ -23,6 +23,8 @@ def get_llm(model_name, cache_dir="llm_weights"):
     )
 
     model.seqlen = model.config.max_position_embeddings 
+    if model.config.architectures[0] == "MistralForCausalLM":
+        model.seqlen = 4096
     return model
 
 def main():
