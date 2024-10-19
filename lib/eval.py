@@ -11,7 +11,7 @@ import fnmatch
 
 
 # Function to evaluate perplexity (ppl) on a specified model and tokenizer
-def eval_ppl(args, model, tokenizer, device=torch.device("cuda:0")):
+def eval_ppl(model, tokenizer, device=torch.device("cuda:0")):
     # Set dataset
     dataset = "wikitext2"
 
