@@ -1,3 +1,4 @@
+import gc
 import time 
 import heapq 
 import torch 
@@ -200,11 +201,20 @@ def prune_wanda(args, model, tokenizer, device=torch.device("cuda:0"), prune_n=0
                     W_mask.scatter_(1, indices, True)
 
             subset[name].weight.data[W_mask] = 0  ## set weights to zero 
-
+            
+            del W_mask, W_metric
+            torch.cuda.empty_cache()
+            gc.collect()
+            
         for j in range(args.nsamples):
             with torch.no_grad():
                 outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
         inps, outs = outs, inps
+
+
+        del wrapped_layers
+        torch.cuda.empty_cache()
+        gc.collect()
 
     model.config.use_cache = use_cache 
     torch.cuda.empty_cache()
