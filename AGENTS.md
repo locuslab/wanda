@@ -2,30 +2,38 @@
 
 ## Context
 
-This is the `modern` branch of [Wanda](https://arxiv.org/abs/2306.11695) — pruning LLMs by weights & activations. The branch targets modern decoder-only families: **Qwen2.5/3, Gemma2/3, LLaMA**. OPT, GPT-2, and other legacy models were intentionally removed.
+This is the `modern` branch of [Wanda](https://arxiv.org/abs/2306.11695) — pruning LLMs by weights & activations. The branch targets modern decoder-only families: **Qwen2.5/3, Gemma2, LLaMA**. OPT, GPT-2, and other legacy models were intentionally removed.
 
 ## Architecture
 
 - Single pruning entry point: `main.py` → `lib/prune.py`
 - `lib/prune.py` assumes `model.model.layers` (standard decoder-only transformer block)
 - `lib/sparsegpt.py` — SparseGPT algorithm; `lib/ablate.py` — ablation variant; `lib/layerwrapper.py` — Wanda helper
-- `real_main.py` — batch orchestrator for Gemma2 models
-- `single_main.py` — batch orchestrator for Qwen2.5 models
+- `real_main.py` — batch orchestrator for models
+- `main.py` — batch orchestrator for models
 - `image_classifiers/` — separate sub-project (Timm pruning), not related to LLM pipeline
 - `dense_ft/trainer.py` — vendored old transformers internals, **broken** on modern transformers
 
 ## Environment
 
-```
-conda create -n wanda_vision python=3.11
-pip install torch==2.5.1 transformers==4.51.0 datasets==3.3.0 accelerate==1.3.0 sentencepiece==0.2.0 wandb
+The environment is already created as `conda create -n wanda_vision python=3.11`. **Always activate it before running anything:**
+
+```bash
+conda activate wanda_vision
 ```
 
-This repo has no GPU in development. Target runtime is Colab/Kaggle/Vast.ai with GPU.
+Or use `conda run -n wanda_vision <command>` for one-off invocations. Never run Python from the base conda environment or a different env — the code requires the exact package versions in this env.
+
+Packages installed:
+```
+torch==2.5.1 transformers==4.51.0 datasets==3.3.0 accelerate==1.3.0 sentencepiece==0.2.0 wandb
+```
+
+This dev machine has no GPU. Target runtime is Colab/Kaggle/Vast.ai with GPU — expect `torch.cuda` to be unavailable locally but functional on the target.
 
 ## Gotchas
 
-- **`model.seqlen = 4096`** hardcoded in `main.py:26`. Adjust for models with longer context windows.
+- **`model.seqlen = 4096`** hardcoded in `main.py:26`. **DO NOT CHANGE.** Must stay 4096.
 - **`torch.float16`** hardcoded in all `from_pretrained` calls. Gemma2 is natively bfloat16 — may need `torch.bfloat16` or `"auto"`.
 - **`trust_remote_code=True`** is set in `main.py` for Gemma2/Qwen3 support.
 - **`device` detection** uses `next(iter(model.parameters())).device` — old `model.hf_device_map` dict access was removed.

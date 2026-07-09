@@ -8,12 +8,11 @@ from huggingface_hub import login
 from tqdm.auto import tqdm
 
 try:
-    import lm_eval
+    import lm_eval  # noqa: F401
 except ImportError:
     subprocess.run(["pip", "install", "lm_eval"], check=True)
-    import lm_eval
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.makedirs("pruned_models", exist_ok=True)
 login(TOKEN)
 
@@ -27,9 +26,9 @@ repository = 'wanda_vision'
 repo_path = os.getcwd()
 
 main_tests = [(model_name, pruning_dataset_name, prune_method)
-              for pruning_dataset_name in ("magic_hq", "magic_qa")
+              for pruning_dataset_name in ("c4")
               for prune_method in ("magnitude", "wanda", "sparsegpt")
-              for model_name in ("google/gemma-3-270m", "google/gemma-3-1b-pt", "google/gemma-3-4b-pt")]
+              for model_name in ("google/gemma-2-9b", "Qwen/Qwen3-14B")]
 
 no_eval = False
 for idx, (model_name, pruning_dataset_name, prune_method) in tqdm(enumerate(main_tests), leave=True):

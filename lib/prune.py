@@ -131,7 +131,7 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
                         tmp = W_metric[:, ii:(ii + prune_m)].float()
                         W_mask.scatter_(1, ii + torch.topk(tmp, prune_n, dim=1, largest=False)[1], True)
             else:
-                thresh = torch.sort(W_metric.flatten().cuda())[0][int(W.numel() * args.sparsity_ratio)].cpu()
+                thresh = torch.sort(W_metric.flatten().to(device))[0][int(W.numel() * args.sparsity_ratio)].cpu()
                 W_mask = (W_metric <= thresh)
 
             W[W_mask] = 0
@@ -268,7 +268,8 @@ def prune_sparsegpt(args, model, tokenizer, dev, prune_n=0, prune_m=0):
         except ValueError:
             pass
     layers[0] = layers[0]._the_module
-    torch.cuda.empty_cache()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
     outs = torch.zeros_like(inps)
     attention_mask = cache['attention_mask']
@@ -314,12 +315,10 @@ def prune_sparsegpt(args, model, tokenizer, dev, prune_n=0, prune_m=0):
             outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
 
         layers[i] = layer
-        # # torch.cuda.empty_cache()
 
         inps, outs = outs, inps
 
     model.config.use_cache = use_cache
-    # # torch.cuda.empty_cache()
 
 
 @torch.no_grad()
@@ -364,7 +363,8 @@ def prune_ablate(args, model, tokenizer, dev, prune_n=0, prune_m=0):
         except ValueError:
             pass
     layers[0] = layers[0]._the_module
-    torch.cuda.empty_cache()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
     outs = torch.zeros_like(inps)
     attention_mask = cache['attention_mask']

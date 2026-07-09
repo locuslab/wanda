@@ -63,7 +63,7 @@ class AblateGPT:
                     tmp = W_metric[:,ii:(ii+prunem)].float()
                     W_mask.scatter_(1,ii+torch.topk(tmp, prunen,dim=1, largest=False)[1], True)
         else:
-            thresh = torch.sort(W_metric.flatten().cuda())[0][int(W.numel()*sparsity)].cpu()
+            thresh = torch.sort(W_metric.flatten().to(self.dev))[0][int(W.numel()*sparsity)].cpu()
             W_mask = (W_metric<=thresh)
 
         return W_mask
@@ -143,9 +143,11 @@ class AblateGPT:
 
             W[:, i2:] -= Err1.matmul(Hinv[i1:i2, i2:])
 
-        torch.cuda.synchronize()
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
         self.layer.weight.data.copy_(W.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype))
 
     def free(self):
         self.H = None
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()

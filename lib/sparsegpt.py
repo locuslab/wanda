@@ -104,9 +104,11 @@ class SparseGPT:
 
             W[:, i2:] -= Err1.matmul(Hinv[i1:i2, i2:])
 
-        torch.cuda.synchronize()
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
         self.layer.weight.data.copy_(W.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype))
 
     def free(self):
         self.H = None
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
