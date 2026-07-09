@@ -40,11 +40,7 @@ for idx, (model_name, pruning_dataset_name, prune_method) in tqdm(enumerate(main
         f"\n\twith {sparsity_type} sparsity (ratio = {sparsity_ratio}).")
     print(f"Model will be saved at '{model_save_path}'")
 
-    script = (
-        "main_opt.py" if "opt" in model_name else
-        "main_gemma.py" if "gemma" in model_name else
-        "main.py"
-    )
+    script = "main.py"
 
     cmd = [
         "python", script,

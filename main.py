@@ -16,11 +16,12 @@ print('# of gpus: ', torch.cuda.device_count())
 
 def get_llm(model_name, cache_dir="llm_weights"):
     model = AutoModelForCausalLM.from_pretrained(
-        model_name, 
-        torch_dtype=torch.float16, 
-        cache_dir=cache_dir, 
-        low_cpu_mem_usage=True, 
-        device_map="auto"
+        model_name,
+        torch_dtype=torch.float16,
+        cache_dir=cache_dir,
+        low_cpu_mem_usage=True,
+        device_map="auto",
+        trust_remote_code=True
     )
 
     model.seqlen = 4096
@@ -45,7 +46,7 @@ def main():
 
     # Setting seeds for reproducibility
     np.random.seed(args.seed)
-    torch.random.manual_seed(args.seed)
+    torch.manual_seed(args.seed)
 
     # Handling n:m sparsity
     prune_n, prune_m = 0, 0
@@ -57,11 +58,9 @@ def main():
     print(f"loading llm model {args.model}")
     model = get_llm(args.model, args.cache_dir)
     model.eval()
-    tokenizer = AutoTokenizer.from_pretrained(args.model, use_fast=False)
+    tokenizer = AutoTokenizer.from_pretrained(args.model, use_fast=False, trust_remote_code=True)
 
-    device = torch.device("cuda:0")
-    if "30b" in args.model or "66b" in args.model: # for 30b and 65b we use device_map to load onto multiple A6000 GPUs, thus the processing here.
-        device = model.hf_device_map["lm_head"]
+    device = next(iter(model.parameters())).device
     print("use device ", device)
 
     if args.sparsity_ratio != 0:

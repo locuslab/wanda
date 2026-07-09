@@ -11,7 +11,7 @@ from datasets import load_dataset, DatasetDict, Dataset
 # Set seed for reproducibility
 def set_seed(seed):
     np.random.seed(seed)
-    torch.random.manual_seed(seed)
+    torch.manual_seed(seed)
 
 
 # Wrapper for tokenized input IDs

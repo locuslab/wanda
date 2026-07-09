@@ -17,7 +17,7 @@ from pathlib import Path
 from timm.models import create_model
 import torch
 import torch.distributed as dist
-from torch._six import inf
+from math import inf
 
 class SmoothedValue(object):
     """Track a series of values and provide access to smoothed values over a

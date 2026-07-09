@@ -56,8 +56,7 @@ from transformers.utils.versions import require_version
 from peft import (
     LoraConfig,
     get_peft_model,
-    get_peft_model_state_dict,
-    prepare_model_for_int8_training,
+    prepare_model_for_kbit_training,
     set_peft_model_state_dict,
 )
 
@@ -372,7 +371,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(model_args.model_name_or_path, torch_dtype=torch.float16, cache_dir=model_args.cache_dir, low_cpu_mem_usage=True, device_map="auto")
 
     ############################################################################################
-    model = prepare_model_for_int8_training(model)
+    model = prepare_model_for_kbit_training(model)
     config = LoraConfig(
         r=model_args.lora_r,
         lora_alpha=model_args.lora_alpha,
@@ -550,14 +549,7 @@ def main():
     ############## code imported from alpaca-lora ###################
     model.config.use_cache = False
 
-    old_state_dict = model.state_dict
-    model.state_dict = (
-        lambda self, *_, **__: get_peft_model_state_dict(
-            self, old_state_dict()
-        )
-    ).__get__(model, type(model))
-
-    if torch.__version__ >= "2" and sys.platform != "win32":
+    if torch.__version__ >= "2":
         model = torch.compile(model)
     ############## code imported from alpaca-lora ###################
 
@@ -571,10 +563,7 @@ def main():
         train_result = trainer.train(resume_from_checkpoint=checkpoint)
         # trainer.save_model()  # Saves the tokenizer too for easy upload
 
-        #############################################################
         model.save_pretrained(training_args.output_dir)
-        torch.save(trainer.model.state_dict(), f"{training_args.output_dir}/adapter_model.bin")
-        #############################################################
 
         metrics = train_result.metrics
 

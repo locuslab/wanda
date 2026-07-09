@@ -146,7 +146,7 @@ def eval_zero_shot(model_name, model, tokenizer, task_list=["boolq","rte","hella
     if use_accelerate:
         model_args = f"pretrained={model_name},cache_dir=./llm_weights,use_accelerate=True"
     results = evaluator.simple_evaluate(
-        model="hf-causal-experimental",
+        model="hf",
         model_args=model_args,
         tasks=task_names,
         num_fewshot=num_fewshot,

@@ -3,10 +3,8 @@ import time
 
 import torch
 import torch.nn as nn
-import transformers
 
-torch.backends.cuda.matmul.allow_tf32 = False
-torch.backends.cudnn.allow_tf32 = False
+torch.set_float32_matmul_precision("highest")
 
 class AblateGPT:
 
@@ -16,8 +14,6 @@ class AblateGPT:
         W = layer.weight.data.clone()
         if isinstance(self.layer, nn.Conv2d):
             W = W.flatten(1)
-        if isinstance(self.layer, transformers.Conv1D):
-            W = W.t()
         self.rows = W.shape[0]
         self.columns = W.shape[1]
         self.H = torch.zeros((self.columns, self.columns), device=self.dev)
@@ -29,7 +25,7 @@ class AblateGPT:
         if len(inp.shape) == 2:
             inp = inp.unsqueeze(0)
         tmp = inp.shape[0]
-        if isinstance(self.layer, nn.Linear) or isinstance(self.layer, transformers.Conv1D):
+        if isinstance(self.layer, nn.Linear):
             if len(inp.shape) == 3:
                 inp = inp.reshape((-1, inp.shape[-1]))
             inp = inp.t()
@@ -55,10 +51,10 @@ class AblateGPT:
             indices = sort_res[1][:,:int(W_metric.shape[1]*sparsity)]
             W_mask.scatter_(1, indices, True)
 
-        return W_mask 
+        return W_mask
 
     def get_mag_mask(self, sparsity, prunen, prunem):
-        W = self.layer.weight.data 
+        W = self.layer.weight.data
         W_metric = torch.abs(W)
         if prunen != 0:
             W_mask = (torch.zeros_like(W)==1)
@@ -70,7 +66,7 @@ class AblateGPT:
             thresh = torch.sort(W_metric.flatten().cuda())[0][int(W.numel()*sparsity)].cpu()
             W_mask = (W_metric<=thresh)
 
-        return W_mask 
+        return W_mask
 
     def fasterprune(
         self, args, sparsity, mask=None, prune_n=0, prune_m=0, blocksize=128, percdamp=.01
@@ -78,8 +74,6 @@ class AblateGPT:
         W = self.layer.weight.data.clone()
         if isinstance(self.layer, nn.Conv2d):
             W = W.flatten(1)
-        if isinstance(self.layer, transformers.Conv1D):
-            W = W.t()
         W = W.float()
 
         tick = time.time()
@@ -110,11 +104,10 @@ class AblateGPT:
             Losses1 = torch.zeros_like(W1)
             Hinv1 = Hinv[i1:i2, i1:i2]
 
-            if prune_n == 0 or mask is not None: 
+            if prune_n == 0 or mask is not None:
                 if mask is not None:
                     mask1 = mask[:, i1:i2]
                 else:
-                    # tmp = W1 ** 2 / (torch.diag(Hinv1).reshape((1, -1))) ** 2
                     if "wanda" in args.prune_method:
                         tmp = torch.abs(W1) * torch.sqrt(self.scaler_row[i1:i2].reshape((1,-1)))
                     elif "mag" in args.prune_method:
@@ -129,7 +122,6 @@ class AblateGPT:
                 d = Hinv1[i, i]
 
                 if prune_n != 0 and i % prune_m == 0 and mask is None:
-                    # tmp = W1[:, i:(i + prune_m)] ** 2 / (torch.diag(Hinv1)[i:(i + prune_m)].reshape((1, -1))) ** 2
                     if "wanda" in args.prune_method:
                         tmp = torch.abs(W1[:, i:(i+prune_m)]) * torch.sqrt(self.scaler_row[(i+i1):(i+i1+prune_m)].reshape((1,-1)))
                     elif "mag" in args.prune_method:
@@ -142,7 +134,7 @@ class AblateGPT:
                 Q1[:, i] = q
                 Losses1[:, i] = (w - q) ** 2 / d ** 2
 
-                err1 = (w - q) / d 
+                err1 = (w - q) / d
                 W1[:, i:] -= err1.unsqueeze(1).matmul(Hinv1[i, i:].unsqueeze(0))
                 Err1[:, i] = err1
 
@@ -152,9 +144,7 @@ class AblateGPT:
             W[:, i2:] -= Err1.matmul(Hinv[i1:i2, i2:])
 
         torch.cuda.synchronize()
-        if isinstance(self.layer, transformers.Conv1D):
-            W = W.t()
-        self.layer.weight.data = W.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype)
+        self.layer.weight.data.copy_(W.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype))
 
     def free(self):
         self.H = None

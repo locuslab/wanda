@@ -53,8 +53,7 @@ print(
     f"\n\t\twith KEEP ratio = {keep_sparsity_ratio} (prune {prune_sparsity_type.replace(':', ' of ')}, KEEP {keep_sparsity_type.replace(':', ' of ')}).")
 print(f"Model will be saved at '{model_save_path}'")
 
-script = "main_opt.py" if "opt" in model_name else "main_gemma.py" if "gemma" in model_name else "main.py"
-script = repo_path + "/" + script
+script = repo_path + "/main.py"
 cmd = [
     "python", script,
     "--model", model_name,

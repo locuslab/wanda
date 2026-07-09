@@ -1,4 +1,4 @@
-from transformers.trainer import Trainer 
+from transformers import Trainer 
 import torch 
 import torch.nn as nn 
 

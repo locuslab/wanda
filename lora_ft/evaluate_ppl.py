@@ -105,7 +105,7 @@ def eval_llm(model, tokenizer, task_list=["boolq","piqa","hellaswag","winogrande
         return list(task_names)
     task_names = pattern_match(task_list, tasks.ALL_TASKS)
     results = evaluator.simple_evaluate(
-        model="hf-causal-experimental",
+        model="hf",
         model_args="pretrained=decapoda-research/llama-7b-hf",
         tasks=task_names,
         num_fewshot=num_fewshot,

@@ -4,8 +4,7 @@ import time
 import torch
 import torch.nn as nn
 
-torch.backends.cuda.matmul.allow_tf32 = False
-torch.backends.cudnn.allow_tf32 = False
+torch.set_float32_matmul_precision("highest")
 
 
 class WrappedLayer:
