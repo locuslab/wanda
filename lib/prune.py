@@ -102,7 +102,12 @@ def prepare_calibration_input(model, dataloader, device):
     position_ids = cache['position_ids']
     model.config.use_cache = use_cache
 
-    return inps, outs, attention_mask, position_ids
+    position_embeddings = None
+    if hasattr(model.model, 'rotary_emb'):
+        x = torch.empty(1, 1, dtype=dtype, device=device)
+        position_embeddings = model.model.rotary_emb(x, position_ids)
+
+    return inps, outs, attention_mask, position_ids, position_embeddings
 
 
 def return_given_alpha(alpha, sort_res, W_metric, tmp_metric, sum_before):
@@ -145,7 +150,7 @@ def prune_wanda(args, model, tokenizer, device=torch.device("cuda:0"), prune_n=0
     dataloader, _ = get_loaders(args.pruning_dataset_name, nsamples=args.nsamples, seed=args.seed, seqlen=model.seqlen, tokenizer=tokenizer)
     print("dataset loading complete")
     with torch.no_grad():
-        inps, outs, attention_mask, position_ids = prepare_calibration_input(model, dataloader, device)
+        inps, outs, attention_mask, position_ids, position_embeddings = prepare_calibration_input(model, dataloader, device)
 
     layers = model.model.layers
 
@@ -171,7 +176,7 @@ def prune_wanda(args, model, tokenizer, device=torch.device("cuda:0"), prune_n=0
             handles.append(subset[name].register_forward_hook(add_batch(name)))
         for j in range(args.nsamples):
             with torch.no_grad():
-                outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+                outs[j] = layer(inps[j].unsqueeze(0), position_embeddings=position_embeddings, attention_mask=attention_mask, position_ids=position_ids)[0]
         for h in handles:
             h.remove()
 
@@ -219,7 +224,7 @@ def prune_wanda(args, model, tokenizer, device=torch.device("cuda:0"), prune_n=0
 
         for j in range(args.nsamples):
             with torch.no_grad():
-                outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+                outs[j] = layer(inps[j].unsqueeze(0), position_embeddings=position_embeddings, attention_mask=attention_mask, position_ids=position_ids)[0]
         inps, outs = outs, inps
 
     model.config.use_cache = use_cache
@@ -275,6 +280,11 @@ def prune_sparsegpt(args, model, tokenizer, dev, prune_n=0, prune_m=0):
     attention_mask = cache['attention_mask']
     position_ids = cache['position_ids']
 
+    position_embeddings = None
+    if hasattr(model.model, 'rotary_emb'):
+        x = torch.empty(1, 1, dtype=dtype, device=dev)
+        position_embeddings = model.model.rotary_emb(x, position_ids)
+
     print('Ready.')
 
     for i in range(len(layers)):
@@ -300,7 +310,7 @@ def prune_sparsegpt(args, model, tokenizer, dev, prune_n=0, prune_m=0):
             handles.append(subset[name].register_forward_hook(add_batch(name)))
 
         for j in range(args.nsamples):
-            outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+            outs[j] = layer(inps[j].unsqueeze(0), position_embeddings=position_embeddings, attention_mask=attention_mask, position_ids=position_ids)[0]
         for h in handles:
             h.remove()
 
@@ -312,7 +322,7 @@ def prune_sparsegpt(args, model, tokenizer, dev, prune_n=0, prune_m=0):
             gpts[name].free()
 
         for j in range(args.nsamples):
-            outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+            outs[j] = layer(inps[j].unsqueeze(0), position_embeddings=position_embeddings, attention_mask=attention_mask, position_ids=position_ids)[0]
 
         layers[i] = layer
 
@@ -370,6 +380,11 @@ def prune_ablate(args, model, tokenizer, dev, prune_n=0, prune_m=0):
     attention_mask = cache['attention_mask']
     position_ids = cache['position_ids']
 
+    position_embeddings = None
+    if hasattr(model.model, 'rotary_emb'):
+        x = torch.empty(1, 1, dtype=dtype, device=dev)
+        position_embeddings = model.model.rotary_emb(x, position_ids)
+
     print('Ready.')
 
     for i in range(len(layers)):
@@ -395,7 +410,7 @@ def prune_ablate(args, model, tokenizer, dev, prune_n=0, prune_m=0):
             handles.append(subset[name].register_forward_hook(add_batch(name)))
 
         for j in range(args.nsamples):
-            outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+            outs[j] = layer(inps[j].unsqueeze(0), position_embeddings=position_embeddings, attention_mask=attention_mask, position_ids=position_ids)[0]
         for h in handles:
             h.remove()
 
@@ -415,7 +430,7 @@ def prune_ablate(args, model, tokenizer, dev, prune_n=0, prune_m=0):
             gpts[name].free()
 
         for j in range(args.nsamples):
-            outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+            outs[j] = layer(inps[j].unsqueeze(0), position_embeddings=position_embeddings, attention_mask=attention_mask, position_ids=position_ids)[0]
 
         layers[i] = layer
         # # torch.cuda.empty_cache()
