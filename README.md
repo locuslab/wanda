@@ -55,6 +55,34 @@ We provide a quick overview of the arguments:
 - `--use_variant`: Whether to use the Wanda variant, default is `False`. 
 - `--save`: Specifies the directory where the result will be stored.
 
+### Elastic Reordered SparseGPT experiment
+
+The experimental `elastic_sparsegpt` method ranks all input columns from low to high importance once per linear layer. For a target sparsity `p` in `[0.1, 0.8]`, it activates only the reordered prefix `p / 0.8` of columns and dynamically applies an 80% SparseGPT mask inside each 128-column compensation segment. Masks are never generated for the whole layer in advance: every segment is scored after preceding compensation has updated its weights. Passing `--elastic_sparsities` advances one model through an increasing sequence of stages and writes a checkpoint result for every stage.
+
+Use identical model, calibration sample, seed, and sparsity settings for the baseline and experimental runs:
+
+```sh
+python main.py \
+  --model <MODEL_PATH> \
+  --prune_method sparsegpt \
+  --sparsity_type unstructured \
+  --sparsity_ratio 0.3 \
+  --nsamples 128 \
+  --seed 0 \
+  --save results/sparsegpt-030
+
+python main.py \
+  --model <MODEL_PATH> \
+  --prune_method elastic_sparsegpt \
+  --sparsity_type unstructured \
+  --elastic_sparsities 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 \
+  --nsamples 128 \
+  --seed 0 \
+  --save results/elastic-prefix
+```
+
+For example, 20% global sparsity activates the first 25% of reordered columns and prunes 80% of weights in that prefix; 30% keeps the 20% mask, activates the next 12.5% of columns, and prunes 80% only in that new region. This produces nested masks while avoiding full-column or full-group deletion. The command above writes `results/elastic-prefix/s01` through `s08`.
+
 For structured N:M sparsity, set the argument `--sparsity_type` to "2:4" or "4:8". An illustrative command is provided below:
 ```sh
 python main.py \
@@ -128,4 +156,4 @@ This project is released under the MIT license. Please see the [LICENSE](LICENSE
 Feel free to discuss papers/code with us through issues/emails!
 
 mingjies at cs.cmu.edu  
-liuzhuangthu at gmail.com 
+liuzhuangthu at gmail.com
